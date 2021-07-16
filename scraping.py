@@ -1,15 +1,10 @@
-from datetime import datetime
-from pathlib import Path
 from time import sleep
 
 import pandas as pd
 
 from driver_setting import set_driver
 from log_setting import write_log
-
-dir = Path("./csv")
-dir.mkdir(parents=True, exist_ok=True)
-CSV_FILE_PATH = "./csv/{searchword}_{datetime}_data.csv"
+from write_csv import write_csv
 
 
 def main():
@@ -60,22 +55,13 @@ def main():
     # CSVに書き込み
     if len(df) > 0:
         write_csv("_".join(search_words), df)
+        sleep(5)
         write_log(f"{len(df)}件出力しました。")
     else:
         write_log(f"{len(df)}件です。")
 
     # ブラウザ閉じる
     driver.quit()
-
-
-# CSV書き込み
-def write_csv(search_word, df):
-    # csvファイル名に検索ワードを加える。
-    csv_path = CSV_FILE_PATH.format(
-        searchword=search_word, datetime=datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-    )
-    # 行番号なしで出力
-    df.to_csv(csv_path, index=False, encoding="utf-8-sig")
 
 
 # データ取得できない場合はスルー
