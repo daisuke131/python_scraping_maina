@@ -35,7 +35,7 @@ class mainavi_scraping:
         driver.quit()
 
     def loop_scraping(self):
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
             for page_counter in range(1, self.page_count + 1):
                 executor.submit(self.scrape, page_counter=page_counter)
         self.df.sort_index()
