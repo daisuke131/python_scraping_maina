@@ -52,8 +52,8 @@ class mainavi_scraping:
             data_counter += 1
             self.df = self.df.append(
                 {
-                    "page": str(page_counter),
-                    "index": str(data_counter),
+                    "page": page_counter,
+                    "index": data_counter,
                     "会社名": self.fetch_corp_name(corp, "div > section > h3"),
                     "勤務地": self.find_table_target_word(corp, "勤務地"),
                     "給与": self.find_table_target_word(corp, "給与"),
