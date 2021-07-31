@@ -2,7 +2,7 @@ from time import sleep
 
 import pandas as pd
 
-from driver_setting import set_driver
+from common.driver import set_driver
 from log_setting import write_log
 from write_csv import write_csv
 
