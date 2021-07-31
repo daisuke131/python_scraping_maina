@@ -1,4 +1,3 @@
-# from bs4 import BeautifulSoup
 import os
 
 from dotenv import load_dotenv
@@ -7,22 +6,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.utils import ChromeType
 
-# from selenium.webdriver import Chrome, ChromeOptions
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-# from selenium.webdriver.support import expected_conditions
-# from selenium.webdriver.support.select import Select
-# from selenium.webdriver.support.ui import WebDriverWait
-# from webdriver_manager.chrome import ChromeDriverManager
 
-
-# class Driver:
-#     def __init__(self, headless_flg: bool = True):
-#         self.headless_flg = headless_flg
-#         self.driver = self.set_driver()
-
-
-def set_driver(headless_flg: bool = False):
+def set_driver(headless_flg: bool = True):
     load_dotenv()
     browser_name = os.getenv("BROWSER")
     user_agent = os.getenv("USER_AGENT")
@@ -69,11 +54,5 @@ def set_driver(headless_flg: bool = False):
             driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
         print("driver起動成功")
         return driver
-        # driver = Chrome(options=options)
-        # driver = Chrome(ChromeDriverManager().install(), options=options)
-        # logger.info("chrome driver起動成功")
-        # return driver
     except Exception as e:
-        # logger.error(f"driver起動エラー:{e}")
-        print(f"driver起動エラー:{e}")
         return None
