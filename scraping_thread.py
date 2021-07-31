@@ -1,10 +1,12 @@
 import math
+
+# import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
-from driver_setting import set_driver
+from common.driver import set_driver
 from log_setting import write_log
 from write_csv import write_csv
 
@@ -22,9 +24,18 @@ class mainavi_scraping:
 
     def fetch_page_count(self):
         query_url = SEARCH_QUERY_URL.format(query_word=self.query_word)
-        driver = set_driver(True)
+        driver = set_driver()
+        # driver = set_driver(True)
         driver.get(query_url)
         time.sleep(3)
+        try:
+            # ポップアップを閉じる
+            driver.execute_script('document.querySelector(".karte-close").click()')
+            time.sleep(1)
+            # ポップアップを閉じる
+            driver.execute_script('document.querySelector(".karte-close").click()')
+        except Exception:
+            pass
         data_count = int(
             driver.find_element_by_xpath(
                 "/html/body/div[1]/div[3]/div[2]/div/p[2]/em"
@@ -33,37 +44,39 @@ class mainavi_scraping:
         self.page_count = math.ceil(data_count / 50)
         driver.quit()
 
-    def loop_scraping(self):
-        with ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
-            for page_counter in range(1, self.page_count + 1):
-                executor.submit(self.scrape, page_counter=page_counter)
-        self.df.sort_values(["page", "index"])
-
     def scrape(self, page_counter):
+        print(f"================{page_counter}ページ目start================")
         query_url = PAGE_QUERY_URL.format(
             query_word=self.query_word, page_counter=page_counter
         )
-        driver = set_driver(True)
+        driver = set_driver()
         driver.get(query_url)
         time.sleep(3)
+        try:
+            # ポップアップを閉じる
+            driver.execute_script('document.querySelector(".karte-close").click()')
+            time.sleep(1)
+            # ポップアップを閉じる
+            driver.execute_script('document.querySelector(".karte-close").click()')
+            time.sleep(3)
+        except Exception:
+            pass
         data_counter = 0
         corps_list = driver.find_elements_by_class_name("cassetteRecruit__content")
         for corp in corps_list:
             data_counter += 1
-            try:
-                self.df = self.df.append(
-                    {
-                        "page": str(page_counter),
-                        "index": str(data_counter),
-                        "会社名": self.fetch_corp_name(corp, "div > section > h3"),
-                        "勤務地": self.find_table_target_word(corp, "勤務地"),
-                        "給与": self.find_table_target_word(corp, "給与"),
-                    },
-                    ignore_index=True,
-                )
-            except Exception:
-                pass
+            self.df = self.df.append(
+                {
+                    "page": page_counter,
+                    "index": data_counter,
+                    "会社名": self.fetch_corp_name(corp, "div > section > h3"),
+                    "勤務地": self.find_table_target_word(corp, "勤務地"),
+                    "給与": self.find_table_target_word(corp, "給与"),
+                },
+                ignore_index=True,
+            )
         driver.quit()
+        print(f"================{page_counter}ページ目end================")
 
     def fetch_corp_name(self, driver, css_selector):
         try:
@@ -104,8 +117,12 @@ def main():
     # URLクエリパラメータで接続
     my_scraping = mainavi_scraping(search_words, query_word)
     my_scraping.fetch_page_count()
-    my_scraping.loop_scraping()
+    with ThreadPoolExecutor(2) as executor:
+        for page_counter in range(my_scraping.page_count):
+            executor.submit(my_scraping.scrape, page_counter + 1)
+    my_scraping.df.sort_values(["page", "index"])
     my_scraping.write_csv()
+    print(len(my_scraping.df))
 
 
 if __name__ == "__main__":
