@@ -18,9 +18,8 @@
   ],
   "python.linting.lintOnSave": true,
   "python.linting.mypyEnabled": true,
-  "python.testing.unittestEnabled": true,
-  "python.testing.unittestArgs": [
-    "discover",
-    "test"
+  "python.linting.mypyArgs": [
+    "--config-file",
+    "mypy.ini"
   ],
 }
