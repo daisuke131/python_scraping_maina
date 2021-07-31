@@ -21,8 +21,6 @@ def set_driver(headless_flg: bool = True):
     if os.name == "posix" or headless_flg:  # Linux　➙　本番環境のためHeadless
         options.add_argument("--headless")
 
-    # logger.info(f"headless:{self.headless_flg} ")
-
     options.add_argument("--user-agent=" + user_agent)
     # self.options.add_argument('log-level=3')
     options.add_argument("--ignore-certificate-errors")
@@ -39,7 +37,6 @@ def set_driver(headless_flg: bool = True):
     options.add_argument("--disable-application-cache")
     options.add_argument("--lang=ja")
 
-    # ChromeのWebDriverオブジェクトを作成する。
     try:
         if "firefox" in browser_name:
             driver = webdriver.Firefox(
@@ -52,7 +49,6 @@ def set_driver(headless_flg: bool = True):
             )
         else:
             driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-        print("driver起動成功")
         return driver
-    except Exception as e:
+    except Exception:
         return None
