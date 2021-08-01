@@ -2,9 +2,8 @@ import math
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
 
+from common.beutifulsoup import bs_setting
 from log_setting import log_setting
 from write_csv import write_csv
 
@@ -33,18 +32,17 @@ class mainavi_scraping:
 
     def fetch_page_count(self):
         query_url = SEARCH_QUERY_URL.format(query_word=self.query_word)
-        resp = requests.get(query_url, timeout=(3.0, 7.5))
-        soup = BeautifulSoup(resp.text, "html.parser")
+        soup = bs_setting(query_url)
         data_count = int(
             soup.select_one(
                 "body > div.wrapper > div:nth-child(5) > "
                 + "div.result > div > p.result__num > em"
-            ).text
+            ).get_text()
         )
         self.page_count = math.ceil(data_count / 50)
 
     def scraping(self):
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
             for page_counter in range(self.page_count):
                 executor.submit(self.fetch_scraping_data, page_counter + 1)
         for df_data in self.df_list:
@@ -55,8 +53,7 @@ class mainavi_scraping:
         query_url = PAGE_QUERY_URL.format(
             query_word=self.query_word, page_counter=page_counter
         )
-        resp = requests.get(query_url, timeout=(3.0, 7.5))
-        soup = BeautifulSoup(resp.text, "html.parser")
+        soup = bs_setting(query_url)
         corps_list = soup.select(".cassetteRecruit__content")
         data_counter = 0
         for corp in corps_list:
@@ -71,11 +68,19 @@ class mainavi_scraping:
                 }
             )
 
-    def fetch_corp_name(self, driver, css_selector):
+    def fetch_corp_name(self, soup, css_selector):
         try:
-            return driver.select_one(css_selector).text
+            return soup.select_one(css_selector).get_text()
         except Exception:
             pass
+
+    # テーブルからヘッダーで指定した内容を取得
+    def find_table_target_word(self, soup, target):
+        table_headers = soup.select(".tableCondition__head")
+        table_bodies = soup.select(".tableCondition__body")
+        for table_header, table_body in zip(table_headers, table_bodies):
+            if table_header.get_text() == target:
+                return table_body.get_text()
 
     def write_csv(self):
         # CSVに書き込み
@@ -84,14 +89,6 @@ class mainavi_scraping:
             log.info(f"{len(self.df)}件出力しました。")
         else:
             log.info(f"{len(self.df)}件です。")
-
-    # テーブルからヘッダーで指定した内容を取得
-    def find_table_target_word(self, driver, target):
-        table_headers = driver.select(".tableCondition__head")
-        table_bodies = driver.select(".tableCondition__body")
-        for table_header, table_body in zip(table_headers, table_bodies):
-            if table_header.text == target:
-                return table_body.text
 
 
 def main():
